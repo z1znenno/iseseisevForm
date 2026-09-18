@@ -13,10 +13,10 @@ namespace iseseisevForm
     public partial class PictureViewForm : Form
     {
         PictureBox picture;
-        Button elPilt, jargPilt, taustCol, sule, lisaPilt;
+        Button elPilt, jargPilt, taustVar, sule, lisaPilt;
         OpenFileDialog openFile;
         List<string> images = new List<string>();
-        int pilt = 0;
+        int pilt = 2;
 
         public PictureViewForm()
         {
@@ -36,48 +36,112 @@ namespace iseseisevForm
             picture.Image = Image.FromFile(images[pilt]);
             Controls.Add(picture);
 
-            Button lisaPilt = new Button();
+            lisaPilt = new Button();
             lisaPilt.Text = "Lisa pilt";
             lisaPilt.Font = MainForm.font;
             lisaPilt.Top = 550;
             lisaPilt.Left = 90;
+            lisaPilt.Click += LisaPilt_Click;
             Controls.Add(lisaPilt);
 
-            Button elPilt = new Button();
+            elPilt = new Button();
             elPilt.Text = "Eelmine pilt";
             elPilt.Font = MainForm.font;
             elPilt.Top = 550;
             elPilt.Left = 165;
-            elPilt.Click += (s, e) => 
-            {
-                try
-                {
-                    pilt -= 1;
-                }
-                catch
-                {
-                    
-                }
-            };
+            elPilt.Click += elPilt_Click;
             Controls.Add(elPilt);
 
-            Button jargPilt = new Button();
+            jargPilt = new Button();
             jargPilt.Text = "Jargmine pilt";
             jargPilt.Font = MainForm.font;
             jargPilt.Top = 550;
             jargPilt.Left = 240;
-            jargPilt.Click += (s, e) =>
-            {
-                try
-                {
-                    pilt -= 1;
-                }
-                catch
-                {
-
-                }
-            };
+            jargPilt.Width = 85;
+            jargPilt.Click += jargPilt_Click;
             Controls.Add(jargPilt);
+
+            taustVar = new Button();
+            taustVar.Text = "Asenda tusta värv";
+            taustVar.Font = MainForm.font;
+            taustVar.Top = 550;
+            taustVar.Left = 325;
+            taustVar.Width = 75;
+            taustVar.Click += TaustVar_Click; 
+            Controls.Add(taustVar);
+
+            sule = new Button();
+            sule.Text = "Sule";
+            sule.Font = MainForm.font;
+            sule.Top = 550;
+            sule.Left = 400;
+            sule.Click += (s, e) => Close();
+            Controls.Add(sule);
+
+        }
+
+        private void TaustVar_Click(object sender, EventArgs e)
+        {
+            ColorDialog color = new ColorDialog();
+
+            color.FullOpen = true;
+
+            if (color.ShowDialog() == DialogResult.OK)
+            {
+                this.BackColor = color.Color;
+            }
+        }
+
+        private void LisaPilt_Click(object sender, EventArgs e)
+        {
+            OpenFileDialog openFile = new OpenFileDialog();
+
+            openFile.Filter = "Pildid (*.jpg, *.jpeg, *.png)|*.jpg;*.jpeg;*.png";
+
+            DialogResult result = openFile.ShowDialog();
+            if (DialogResult.OK == result)
+            {
+                images.Add(openFile.FileName);
+                pilt = images.Count - 1;
+
+                UpdateImage();
+            }
+
+
+        }
+
+        private void UpdateImage()
+        {
+            if (images.Count > 0 && pilt >= 0 && pilt < images.Count)
+            {
+                picture.Image?.Dispose();
+
+                picture.Image = Image.FromFile(images[pilt]);
+            }
+        }
+
+        private void jargPilt_Click(object sender, EventArgs e)
+        {
+            pilt++;
+
+            if (pilt >= images.Count)
+            {
+                pilt = 0;
+            }
+
+            UpdateImage();
+        }
+
+        private void elPilt_Click(object sender, EventArgs e)
+        {
+            pilt--;
+
+            if (pilt < 0)
+            {
+                pilt = images.Count - 1;
+            }
+
+            UpdateImage();
         }
     }
 }

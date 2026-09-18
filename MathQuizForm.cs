@@ -15,6 +15,8 @@ namespace iseseisevForm
         public MathQuizForm()
         {
             InitializeComponent();
+
+
         }
     }
 }
