@@ -15,30 +15,31 @@ namespace iseseisevForm
             Height = 500;
             Width = 500;
             BackgroundImage = Image.FromFile(@"..\..\taustaPiltMain.jpg");
-            Text = "Three form chooser";
+            Text = "Kolme vormi valik";
             
 
             Button mathQuiz = new Button();
             Button PictureView = new Button();
             Button matchingGame = new Button();
 
-            PictureView.Text = "Galery";
+            PictureView.Text = "Galerii";
             PictureView.Font = font;
-            PictureView.Location = new Point(110, 50);
+            PictureView.Location = new Point(50, 50);
             PictureView.Click += PictureView_Click;
             Controls.Add(PictureView);
 
-            mathQuiz.Text = "Math Quiz";
+            mathQuiz.Text = "Matemaatika viktoriin";
             mathQuiz.Font = font;
-            mathQuiz.Location = new Point(185, 50);
+            mathQuiz.Width = 170;
+            mathQuiz.Location = new Point(130, 50);
             mathQuiz.Click += MathQuiz_Click;
             Controls.Add(mathQuiz);
 
-            matchingGame.Text = "Matching Game";
+            matchingGame.Text = "Sobitamise mäng";
             matchingGame.Font = font;
             matchingGame.Width = 125;
             matchingGame.Click += MatchingGame_Click;
-            matchingGame.Location = new Point(260, 50);
+            matchingGame.Location = new Point(305, 50);
 
             Controls.Add(matchingGame);
 

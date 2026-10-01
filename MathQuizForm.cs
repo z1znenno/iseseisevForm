@@ -1,22 +1,581 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Media;
 using System.Windows.Forms;
+using Microsoft.VisualBasic;
+using System.Text.RegularExpressions;
+using System.Net;
+using System.Net.Mail;
 
 namespace iseseisevForm
 {
     public partial class MathQuizForm : Form
     {
+        Random randomizer = new Random();
+
+        int addend1;
+        int addend2;
+
+        int minuend;
+        int subtrahend;
+
+        int multiplicand;
+        int multiplier;
+
+        int dividend;
+        int divisor;
+
+        int timeLeft;
+        int score;
+        int difficultyMultiplier;
+
+        string currentDifficulty;
+
+        Label timeLabel;
+        Label scoreLabel;
+        Label difficultyLabel;
+
+        Label plusLeftLabel;
+        Label plusRightLabel;
+
+        Label minusLeftLabel;
+        Label minusRightLabel;
+
+        Label timesLeftLabel;
+        Label timesRightLabel;
+
+        Label dividedLeftLabel;
+        Label dividedRightLabel;
+
+        NumericUpDown sum;
+        NumericUpDown difference;
+        NumericUpDown product;
+        NumericUpDown quotient;
+
+        Button startButton;
+        ComboBox difficultyComboBox;
+
+        System.Windows.Forms.Timer timer1;
+
+        private string email;
+        private string playerName;
+
         public MathQuizForm()
         {
             InitializeComponent();
 
+            do
+            {
+                playerName = Interaction.InputBox(
+                    "Sisesta oma nimi:",
+                    "Mängija nimi",
+                    "",
+                    -1,
+                    -1);
 
+                if (string.IsNullOrWhiteSpace(playerName))
+                {
+                    MessageBox.Show(
+                        "Nimi on kohustuslik.",
+                        "Kontroll",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Warning);
+                }
+            }
+            while (string.IsNullOrWhiteSpace(playerName));
+
+            do
+            {
+                email = Interaction.InputBox(
+                    "Sisesta oma e-posti aadress:",
+                    "E-posti aadress",
+                    "",
+                    -1,
+                    -1);
+
+                if (string.IsNullOrWhiteSpace(email))
+                {
+                    MessageBox.Show(
+                        "E-posti aadress on kohustuslik.",
+                        "Kontroll",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Warning);
+                    continue;
+                }
+
+                if (!Regex.IsMatch(email.Trim(), @"^[^@\s]+@[^@\s]+\.[^@\s]+$"))
+                {
+                    MessageBox.Show(
+                        "Palun sisesta korrektne e-posti aadress, näiteks nimi@example.com.",
+                        "Vigane e-post",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Warning);
+                }
+                else
+                {
+                    email = email.Trim();
+                    break;
+                }
+            }
+            while (true);
+
+            CreateMathQuizUI();
+        }
+
+        private void SendResultsByEmail()
+        {
+            try
+            {
+                string subject = "Matemaatilise mängu tulemused";
+
+                string body =
+                    "Tere, " + playerName + "!\n\n" +
+                    "Sinu matemaatilise mängu tulemused:\n\n" +
+                    "Nimi: " + playerName + "\n" +
+                    "Raskus: " + currentDifficulty + "\n" +
+                    "Punktid: " + score + "\n\n" +
+                    "Aitäh mängimast!";
+
+                using (MailMessage message = new MailMessage())
+                {
+                    message.From = new MailAddress("order1print@gmail.com");
+                    message.To.Add(email);
+                    message.Subject = subject;
+                    message.Body = body;
+
+                    using (SmtpClient smtp = new SmtpClient("smtp.gmail.com", 587))
+                    {
+                        smtp.EnableSsl = true;
+                        smtp.Credentials = new NetworkCredential(
+                            "order1print@gmail.com",
+                            "ycmr ekph ridu pdqx");
+
+                        smtp.Send(message);
+                    }
+                }
+
+                MessageBox.Show(
+                    "Tulemused saadeti sinu e-postile.",
+                    "E-post",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    "Tulemuste saatmine e-postiga ebaõnnestus.\n\n" +
+                    "Viga: " + ex.Message,
+                    "E-posti viga",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+            }
+        }
+
+        private void CreateMathQuizUI()
+        {
+            this.Text = "Matemaatiline Mäng";
+            this.Size = new Size(550, 520);
+            this.StartPosition = FormStartPosition.CenterScreen;
+            this.FormBorderStyle = FormBorderStyle.Fixed3D;
+            this.MaximizeBox = false;
+
+            this.BackColor = Color.FromArgb(241, 245, 249);
+
+            try
+            {
+                this.BackgroundImage = Image.FromFile("math_background.jpg");
+                this.BackgroundImageLayout = ImageLayout.Stretch;
+            }
+            catch
+            {
+            }
+
+            Label titleLabel = new Label();
+            titleLabel.Text = "MATEMAATILINE MÄNG";
+            titleLabel.Font = new Font("Segoe UI", 20F, FontStyle.Bold);
+            titleLabel.ForeColor = Color.FromArgb(30, 41, 59);
+            titleLabel.BackColor = Color.Transparent;
+            titleLabel.AutoSize = true;
+            titleLabel.Location = new Point(120, 15);
+            this.Controls.Add(titleLabel);
+
+            difficultyLabel = new Label();
+            difficultyLabel.Text = "Raskus:";
+            difficultyLabel.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
+            difficultyLabel.ForeColor = Color.FromArgb(51, 65, 85);
+            difficultyLabel.BackColor = Color.Transparent;
+            difficultyLabel.AutoSize = true;
+            difficultyLabel.Location = new Point(45, 70);
+            this.Controls.Add(difficultyLabel);
+
+            difficultyComboBox = new ComboBox();
+            difficultyComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
+            difficultyComboBox.Font = new Font("Segoe UI", 11F);
+            difficultyComboBox.Items.Add("Lihtne");
+            difficultyComboBox.Items.Add("Keskmine");
+            difficultyComboBox.Items.Add("Raske");
+            difficultyComboBox.SelectedIndex = 0;
+            difficultyComboBox.Size = new Size(130, 30);
+            difficultyComboBox.Location = new Point(120, 65);
+            this.Controls.Add(difficultyComboBox);
+
+            Label scoreTextLabel = new Label();
+            scoreTextLabel.Text = "Punktid:";
+            scoreTextLabel.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
+            scoreTextLabel.ForeColor = Color.FromArgb(51, 65, 85);
+            scoreTextLabel.BackColor = Color.Transparent;
+            scoreTextLabel.AutoSize = true;
+            scoreTextLabel.Location = new Point(285, 70);
+            this.Controls.Add(scoreTextLabel);
+
+            scoreLabel = new Label();
+            scoreLabel.Text = "0";
+            scoreLabel.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
+            scoreLabel.AutoSize = true;
+            scoreLabel.Location = new Point(355, 70);
+            this.Controls.Add(scoreLabel);
+
+            Label timeTextLabel = new Label();
+            timeTextLabel.Text = "Aeg:";
+            timeTextLabel.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
+            timeTextLabel.ForeColor = Color.FromArgb(51, 65, 85);
+            timeTextLabel.BackColor = Color.Transparent;
+            timeTextLabel.AutoSize = true;
+            timeTextLabel.Location = new Point(285, 105);
+            this.Controls.Add(timeTextLabel);
+
+            timeLabel = new Label();
+            timeLabel.Text = "60 sekundit";
+            timeLabel.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
+            timeLabel.AutoSize = true;
+            timeLabel.Location = new Point(330, 105);
+            timeLabel.BackColor = Color.FromArgb(187, 247, 208);
+            timeLabel.ForeColor = Color.FromArgb(22, 101, 52);
+            timeLabel.Padding = new Padding(5);
+            this.Controls.Add(timeLabel);
+
+            plusLeftLabel = CreateNumberLabel(50, 160);
+            plusRightLabel = CreateNumberLabel(180, 160);
+
+            Label plusSign = CreateOperatorLabel("+", 125, 160);
+            Label plusEquals = CreateOperatorLabel("=", 240, 160);
+
+            sum = CreateAnswerBox(290, 155);
+
+            this.Controls.Add(plusLeftLabel);
+            this.Controls.Add(plusRightLabel);
+            this.Controls.Add(plusSign);
+            this.Controls.Add(plusEquals);
+            this.Controls.Add(sum);
+
+            minusLeftLabel = CreateNumberLabel(50, 215);
+            minusRightLabel = CreateNumberLabel(180, 215);
+
+            Label minusSign = CreateOperatorLabel("-", 125, 215);
+            Label minusEquals = CreateOperatorLabel("=", 240, 215);
+
+            difference = CreateAnswerBox(290, 210);
+
+            this.Controls.Add(minusLeftLabel);
+            this.Controls.Add(minusRightLabel);
+            this.Controls.Add(minusSign);
+            this.Controls.Add(minusEquals);
+            this.Controls.Add(difference);
+
+            timesLeftLabel = CreateNumberLabel(50, 270);
+            timesRightLabel = CreateNumberLabel(180, 270);
+
+            Label timesSign = CreateOperatorLabel("×", 125, 270);
+            Label timesEquals = CreateOperatorLabel("=", 240, 270);
+
+            product = CreateAnswerBox(290, 265);
+
+            this.Controls.Add(timesLeftLabel);
+            this.Controls.Add(timesRightLabel);
+            this.Controls.Add(timesSign);
+            this.Controls.Add(timesEquals);
+            this.Controls.Add(product);
+
+            dividedLeftLabel = CreateNumberLabel(50, 325);
+            dividedRightLabel = CreateNumberLabel(180, 325);
+
+            Label dividedSign = CreateOperatorLabel("÷", 125, 325);
+            Label dividedEquals = CreateOperatorLabel("=", 240, 325);
+
+            quotient = CreateAnswerBox(290, 320);
+
+            this.Controls.Add(dividedLeftLabel);
+            this.Controls.Add(dividedRightLabel);
+            this.Controls.Add(dividedSign);
+            this.Controls.Add(dividedEquals);
+            this.Controls.Add(quotient);
+
+            startButton = new Button();
+            startButton.Text = "Alusta mängu!";
+            startButton.Font = new Font("Segoe UI", 13F, FontStyle.Bold);
+            startButton.Size = new Size(220, 50);
+            startButton.Location = new Point(155, 390);
+            startButton.BackColor = Color.FromArgb(59, 130, 246);
+            startButton.ForeColor = Color.White;
+            startButton.FlatStyle = FlatStyle.Flat;
+            startButton.FlatAppearance.BorderSize = 0;
+            startButton.Click += startButton_Click;
+            this.Controls.Add(startButton);
+
+            timer1 = new System.Windows.Forms.Timer();
+            timer1.Interval = 1000;
+            timer1.Tick += timer1_Tick;
+
+            sum.Enter += answer_Enter;
+            sum.Click += answer_Enter;
+
+            difference.Enter += answer_Enter;
+            difference.Click += answer_Enter;
+
+            product.Enter += answer_Enter;
+            product.Click += answer_Enter;
+
+            quotient.Enter += answer_Enter;
+            quotient.Click += answer_Enter;
+        }
+
+        private Label CreateNumberLabel(int x, int y)
+        {
+            Label label = new Label();
+            label.Text = "?";
+            label.Font = new Font("Segoe UI", 18F, FontStyle.Bold);
+            label.ForeColor = Color.FromArgb(30, 41, 59);
+            label.BackColor = Color.Transparent;
+            label.Size = new Size(60, 40);
+            label.Location = new Point(x, y);
+            label.TextAlign = ContentAlignment.MiddleCenter;
+            return label;
+        }
+
+        private Label CreateOperatorLabel(string text, int x, int y)
+        {
+            Label label = new Label();
+            label.Text = text;
+            label.Font = new Font("Segoe UI", 18F, FontStyle.Bold);
+            label.ForeColor = Color.FromArgb(71, 85, 105);
+            label.BackColor = Color.Transparent;
+            label.Size = new Size(40, 40);
+            label.Location = new Point(x, y);
+            label.TextAlign = ContentAlignment.MiddleCenter;
+            return label;
+        }
+
+        private NumericUpDown CreateAnswerBox(int x, int y)
+        {
+            NumericUpDown box = new NumericUpDown();
+            box.Font = new Font("Segoe UI", 16F);
+            box.BackColor = Color.White;
+            box.ForeColor = Color.FromArgb(30, 41, 59);
+            box.Size = new Size(90, 35);
+            box.Location = new Point(x, y);
+            box.Minimum = 0;
+            box.Maximum = 10000;
+            box.Value = 0;
+            return box;
+        }
+
+        public void StartTheQuiz()
+        {
+            score = 0;
+            scoreLabel.Text = "0";
+
+            currentDifficulty = difficultyComboBox.SelectedItem.ToString();
+
+            if (currentDifficulty == "Lihtne")
+            {
+                difficultyMultiplier = 1;
+                timeLeft = 60;
+
+                addend1 = randomizer.Next(1, 21);
+                addend2 = randomizer.Next(1, 21);
+
+                minuend = randomizer.Next(10, 51);
+                subtrahend = randomizer.Next(1, minuend);
+
+                multiplicand = randomizer.Next(1, 6);
+                multiplier = randomizer.Next(1, 6);
+
+                divisor = randomizer.Next(2, 6);
+                int temporaryQuotient = randomizer.Next(1, 6);
+                dividend = divisor * temporaryQuotient;
+            }
+            else if (currentDifficulty == "Keskmine")
+            {
+                difficultyMultiplier = 2;
+                timeLeft = 45;
+
+                addend1 = randomizer.Next(10, 101);
+                addend2 = randomizer.Next(10, 101);
+
+                minuend = randomizer.Next(50, 201);
+                subtrahend = randomizer.Next(10, minuend);
+
+                multiplicand = randomizer.Next(2, 13);
+                multiplier = randomizer.Next(2, 13);
+
+                divisor = randomizer.Next(2, 13);
+                int temporaryQuotient = randomizer.Next(2, 13);
+                dividend = divisor * temporaryQuotient;
+            }
+            else
+            {
+                difficultyMultiplier = 3;
+                timeLeft = 30;
+
+                addend1 = randomizer.Next(100, 501);
+                addend2 = randomizer.Next(100, 501);
+
+                minuend = randomizer.Next(200, 1001);
+                subtrahend = randomizer.Next(50, minuend);
+
+                multiplicand = randomizer.Next(10, 31);
+                multiplier = randomizer.Next(10, 31);
+
+                divisor = randomizer.Next(5, 21);
+                int temporaryQuotient = randomizer.Next(5, 21);
+                dividend = divisor * temporaryQuotient;
+            }
+
+            plusLeftLabel.Text = addend1.ToString();
+            plusRightLabel.Text = addend2.ToString();
+
+            minusLeftLabel.Text = minuend.ToString();
+            minusRightLabel.Text = subtrahend.ToString();
+
+            timesLeftLabel.Text = multiplicand.ToString();
+            timesRightLabel.Text = multiplier.ToString();
+
+            dividedLeftLabel.Text = dividend.ToString();
+            dividedRightLabel.Text = divisor.ToString();
+
+            sum.Value = 0;
+            difference.Value = 0;
+            product.Value = 0;
+            quotient.Value = 0;
+
+            timeLabel.Text = timeLeft + " sekundit";
+            timeLabel.BackColor = Color.FromArgb(187, 247, 208);
+            timeLabel.ForeColor = Color.FromArgb(22, 101, 52);
+
+            timer1.Start();
+        }
+
+        private bool CheckTheAnswer()
+        {
+            return
+                (addend1 + addend2 == sum.Value) &&
+                (minuend - subtrahend == difference.Value) &&
+                (multiplicand * multiplier == product.Value) &&
+                (dividend / divisor == quotient.Value);
+        }
+
+        private int CalculateScore()
+        {
+            int basePoints = 100 * difficultyMultiplier;
+            int speedBonus = timeLeft * 10 * difficultyMultiplier;
+
+            return basePoints + speedBonus;
+        }
+
+        private void startButton_Click(object sender, EventArgs e)
+        {
+            StartTheQuiz();
+
+            startButton.Enabled = false;
+            difficultyComboBox.Enabled = false;
+
+            sum.Focus();
+        }
+
+        private void timer1_Tick(object sender, EventArgs e)
+        {
+            if (CheckTheAnswer())
+            {
+                timer1.Stop();
+
+                int earnedPoints = CalculateScore();
+
+                score += earnedPoints;
+                scoreLabel.Text = score.ToString();
+
+                timeLabel.Text = "Õige!";
+                timeLabel.BackColor = Color.FromArgb(187, 247, 208);
+                timeLabel.ForeColor = Color.FromArgb(22, 101, 52);
+
+                SystemSounds.Asterisk.Play();
+
+                MessageBox.Show(
+                    "Kõik vastused on õiged!\n\n" +
+                    "Raskus: " + currentDifficulty + "\n" +
+                    "Teenitud punktid: " + earnedPoints + "\n" +
+                    "Kokku punktid: " + score,
+                    "Tubli!"
+                );
+
+                SendResultsByEmail();
+
+                startButton.Enabled = true;
+                difficultyComboBox.Enabled = true;
+            }
+            else if (timeLeft > 0)
+            {
+                timeLeft--;
+
+                timeLabel.Text = timeLeft + " sekundit";
+
+                if (timeLeft <= 10)
+                {
+                    timeLabel.BackColor = Color.FromArgb(253, 186, 116);
+                }
+
+                if (timeLeft <= 5)
+                {
+                    timeLabel.BackColor = Color.FromArgb(239, 68, 68);
+                    timeLabel.ForeColor = Color.White;
+                }
+            }
+            else
+            {
+                timer1.Stop();
+
+                timeLabel.Text = "Aeg on läbi!";
+                timeLabel.BackColor = Color.Gray;
+                timeLabel.ForeColor = Color.White;
+
+                sum.Value = addend1 + addend2;
+                difference.Value = minuend - subtrahend;
+                product.Value = multiplicand * multiplier;
+                quotient.Value = dividend / divisor;
+
+                MessageBox.Show(
+                    "Aeg on läbi!\n\n" +
+                    "Sinu punktid: " + score,
+                    "Mäng läbi"
+                );
+
+                SendResultsByEmail();
+
+                startButton.Enabled = true;
+                difficultyComboBox.Enabled = true;
+            }
+        }
+
+        private void answer_Enter(object sender, EventArgs e)
+        {
+            NumericUpDown answerBox = sender as NumericUpDown;
+
+            if (answerBox != null)
+            {
+                answerBox.Select(
+                    0,
+                    answerBox.Value.ToString().Length
+                );
+            }
         }
     }
 }
