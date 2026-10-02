@@ -21,15 +21,6 @@ C# (Windows Forms) rakendus, mis sisaldab kolme minirakendust: matemaatiline mä
 - Akna taustavärvi muutmine.
 - Salvestamine vormingutes PNG, JPEG, BMP, GIF ja TIFF.
 
-## Nõuded
-
-- Windows ja Visual Studio
-- .NET Framework (Windows Forms)
-- Kaust `pildid` failidega `image1.jpg` – `image7.jpg`
-- Fail `matchBG.jpg` programmi käivitatava faili kaustas
-- Fail `math_background.jpg` (pole kohustuslik)
-- Internetiühendus, kui soovid tulemusi e-postile saata
-
 ## Käivitamine
 
 1. Klooni repositoorium:
