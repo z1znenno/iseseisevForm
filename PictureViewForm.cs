@@ -74,7 +74,7 @@ namespace iseseisevForm
             Controls.Add(jargPilt);
 
             taustVar = new Button();
-            taustVar.Text = "Asenda tusta värv";
+            taustVar.Text = "Asenda tausta värv";
             taustVar.Font = MainForm.font;
             taustVar.Top = 550;
             taustVar.Left = 325;

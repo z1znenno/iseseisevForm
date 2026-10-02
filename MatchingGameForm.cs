@@ -28,7 +28,7 @@ namespace iseseisevForm
         private ComboBox difficultyCombo;
         private Button valiPiltNupp;
 
-        private Image selectedImage = Image.FromFile("matchBG.jpg");
+        private Image selectedImage = Image.FromFile(@"..\..\matchBG.jpg");
 
         public MatchingGameForm()
         {
